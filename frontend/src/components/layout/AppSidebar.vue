@@ -10,15 +10,13 @@
     <div class="sidebar-header">
       <!-- Custom Logo or Default Logo -->
       <div class="flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl shadow-glow">
-        <img v-if="settingsLoaded" :src="siteLogo || '/logo.png'" alt="Logo" class="h-full w-full object-contain" />
+        <img v-if="settingsLoaded" :src="siteLogo || '/nexagate-mark.svg'" alt="Logo" class="h-full w-full object-contain" />
       </div>
       <transition name="fade">
         <div v-if="!sidebarCollapsed" class="flex flex-col">
           <span class="text-lg font-bold text-gray-900 dark:text-white">
             {{ siteName }}
           </span>
-          <!-- Version Badge -->
-          <VersionBadge :version="siteVersion" />
         </div>
       </transition>
     </div>
@@ -151,7 +149,6 @@ import { computed, h, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useAdminSettingsStore, useAppStore, useAuthStore, useOnboardingStore } from '@/stores'
-import VersionBadge from '@/components/common/VersionBadge.vue'
 import { sanitizeSvg } from '@/utils/sanitize'
 
 interface NavItem {
@@ -178,7 +175,6 @@ const isDark = ref(document.documentElement.classList.contains('dark'))
 // Site settings from appStore (cached, no flicker)
 const siteName = computed(() => appStore.siteName)
 const siteLogo = computed(() => appStore.siteLogo)
-const siteVersion = computed(() => appStore.siteVersion)
 const settingsLoaded = computed(() => appStore.publicSettingsLoaded)
 
 // SVG Icon Components

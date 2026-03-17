@@ -3916,7 +3916,11 @@ const handleOpenAIExchange = async (authCode: string) => {
     emit('created')
     handleClose()
   } catch (error: any) {
-    oauthClient.error.value = error.response?.data?.detail || t('admin.accounts.oauth.authFailed')
+    oauthClient.error.value =
+      error?.message ||
+      error?.response?.data?.message ||
+      error?.response?.data?.detail ||
+      t('admin.accounts.oauth.authFailed')
     appStore.showError(oauthClient.error.value)
   } finally {
     oauthClient.loading.value = false

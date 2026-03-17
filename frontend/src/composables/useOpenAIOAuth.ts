@@ -31,6 +31,15 @@ export function useOpenAIOAuth(options?: UseOpenAIOAuthOptions) {
   const oauthPlatform = options?.platform ?? 'openai'
   const endpointPrefix = oauthPlatform === 'sora' ? '/admin/sora' : '/admin/openai'
 
+  const resolveErrorMessage = (err: any, fallback: string): string => {
+    return (
+      err?.message ||
+      err?.response?.data?.message ||
+      err?.response?.data?.detail ||
+      fallback
+    )
+  }
+
   // State
   const authUrl = ref('')
   const sessionId = ref('')
@@ -81,7 +90,7 @@ export function useOpenAIOAuth(options?: UseOpenAIOAuthOptions) {
       }
       return true
     } catch (err: any) {
-      error.value = err.response?.data?.detail || 'Failed to generate OpenAI auth URL'
+      error.value = resolveErrorMessage(err, 'Failed to generate OpenAI auth URL')
       appStore.showError(error.value)
       return false
     } finally {
@@ -117,7 +126,7 @@ export function useOpenAIOAuth(options?: UseOpenAIOAuthOptions) {
       const tokenInfo = await adminAPI.accounts.exchangeCode(`${endpointPrefix}/exchange-code`, payload)
       return tokenInfo as OpenAITokenInfo
     } catch (err: any) {
-      error.value = err.response?.data?.detail || 'Failed to exchange OpenAI auth code'
+      error.value = resolveErrorMessage(err, 'Failed to exchange OpenAI auth code')
       appStore.showError(error.value)
       return null
     } finally {
@@ -147,7 +156,7 @@ export function useOpenAIOAuth(options?: UseOpenAIOAuthOptions) {
       )
       return tokenInfo as OpenAITokenInfo
     } catch (err: any) {
-      error.value = err.response?.data?.detail || 'Failed to validate refresh token'
+      error.value = resolveErrorMessage(err, 'Failed to validate refresh token')
       appStore.showError(error.value)
       return null
     } finally {
@@ -174,7 +183,7 @@ export function useOpenAIOAuth(options?: UseOpenAIOAuthOptions) {
       )
       return tokenInfo as OpenAITokenInfo
     } catch (err: any) {
-      error.value = err.response?.data?.detail || 'Failed to validate session token'
+      error.value = resolveErrorMessage(err, 'Failed to validate session token')
       appStore.showError(error.value)
       return null
     } finally {

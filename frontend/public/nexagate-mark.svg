@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title desc">
+  <title id="title">NexaGate</title>
+  <desc id="desc">NexaGate brand mark</desc>
+  <defs>
+    <linearGradient id="bg" x1="14" y1="12" x2="114" y2="116" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0f172a"/>
+      <stop offset="0.55" stop-color="#1d4ed8"/>
+      <stop offset="1" stop-color="#22d3ee"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="28" y1="96" x2="100" y2="30" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#67e8f9"/>
+      <stop offset="1" stop-color="#a7f3d0"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="10" stdDeviation="10" flood-color="#0f172a" flood-opacity="0.22"/>
+    </filter>
+  </defs>
+  <rect x="10" y="10" width="108" height="108" rx="28" fill="url(#bg)" filter="url(#shadow)"/>
+  <path d="M34 93V35h16l22 28V35h22v58H78L56 65v28H34Z" fill="#eef6ff"/>
+  <path d="M46 93 92 35h15L61 93H46Z" fill="url(#accent)"/>
+  <path d="M28 95 89 26" fill="none" stroke="#d1f9ff" stroke-linecap="round" stroke-opacity=".35" stroke-width="4"/>
+</svg>
