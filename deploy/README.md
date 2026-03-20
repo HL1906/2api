@@ -29,22 +29,24 @@ This directory contains files for deploying Sub2API on Linux servers.
 
 ## Docker Deployment (Recommended)
 
+These Docker deployment files build the current checked-out repository source by default.
+
+Important:
+- Upload or clone the full repository to the server.
+- Do not upload only the `deploy/` directory, because Docker builds from the repository root (`..`).
+
 ### Method 1: One-Click Deployment (Recommended)
 
-Use the automated preparation script for the easiest setup:
+Use the automated preparation script for the easiest setup after cloning/uploading this repository to the server:
 
 ```bash
-# Download and run the preparation script
-curl -sSL https://raw.githubusercontent.com/Wei-Shaw/sub2api/main/deploy/docker-deploy.sh | bash
-
-# Or download first, then run
-curl -sSL https://raw.githubusercontent.com/Wei-Shaw/sub2api/main/deploy/docker-deploy.sh -o docker-deploy.sh
+cd /path/to/your-repo/deploy
 chmod +x docker-deploy.sh
 ./docker-deploy.sh
 ```
 
 **What the script does:**
-- Downloads `docker-compose.local.yml` and `.env.example`
+- Uses local `docker-compose.local.yml` and `.env.example`
 - Automatically generates secure secrets (JWT_SECRET, TOTP_ENCRYPTION_KEY, POSTGRES_PASSWORD)
 - Creates `.env` file with generated secrets
 - Creates necessary data directories (data/, postgres_data/, redis_data/)
@@ -53,13 +55,13 @@ chmod +x docker-deploy.sh
 **After running the script:**
 ```bash
 # Start services
-docker-compose -f docker-compose.local.yml up -d
+docker compose -f docker-compose.local.yml up -d --build
 
 # View logs
-docker-compose -f docker-compose.local.yml logs -f sub2api
+docker compose -f docker-compose.local.yml logs -f sub2api
 
 # If admin password was auto-generated, find it in logs:
-docker-compose -f docker-compose.local.yml logs sub2api | grep "admin password"
+docker compose -f docker-compose.local.yml logs sub2api | grep "admin password"
 
 # Access Web UI
 # http://localhost:8080
@@ -70,8 +72,8 @@ docker-compose -f docker-compose.local.yml logs sub2api | grep "admin password"
 If you prefer manual control:
 
 ```bash
-# Clone repository
-git clone https://github.com/Wei-Shaw/sub2api.git
+# Clone your repository
+git clone <your-repository-url> sub2api
 cd sub2api/deploy
 
 # Configure environment
@@ -88,10 +90,10 @@ echo "TOTP_ENCRYPTION_KEY=${TOTP_ENCRYPTION_KEY}" >> .env
 mkdir -p data postgres_data redis_data
 
 # Start all services using local directory version
-docker-compose -f docker-compose.local.yml up -d
+docker compose -f docker-compose.local.yml up -d --build
 
 # View logs (check for auto-generated admin password)
-docker-compose -f docker-compose.local.yml logs -f sub2api
+docker compose -f docker-compose.local.yml logs -f sub2api
 
 # Access Web UI
 # http://localhost:8080
@@ -118,10 +120,14 @@ When using Docker Compose with `AUTO_SETUP=true`:
    - Writes config.yaml
 
 2. No manual Setup Wizard needed - just configure `.env` and start
-
-3. If `ADMIN_PASSWORD` is not set, check logs for the generated password:
+3. Rebuild after source changes with:
    ```bash
-   docker-compose logs sub2api | grep "admin password"
+   docker compose -f docker-compose.local.yml up -d --build
+   ```
+
+4. If `ADMIN_PASSWORD` is not set, check logs for the generated password:
+   ```bash
+   docker compose logs sub2api | grep "admin password"
    ```
 
 ### Database Migration Notes (PostgreSQL)
@@ -162,23 +168,22 @@ For **local directory version** (docker-compose.local.yml):
 
 ```bash
 # Start services
-docker-compose -f docker-compose.local.yml up -d
+docker compose -f docker-compose.local.yml up -d --build
 
 # Stop services
-docker-compose -f docker-compose.local.yml down
+docker compose -f docker-compose.local.yml down
 
 # View logs
-docker-compose -f docker-compose.local.yml logs -f sub2api
+docker compose -f docker-compose.local.yml logs -f sub2api
 
 # Restart Sub2API only
-docker-compose -f docker-compose.local.yml restart sub2api
+docker compose -f docker-compose.local.yml restart sub2api
 
-# Update to latest version
-docker-compose -f docker-compose.local.yml pull
-docker-compose -f docker-compose.local.yml up -d
+# Rebuild after source changes
+docker compose -f docker-compose.local.yml up -d --build
 
 # Remove all data (caution!)
-docker-compose -f docker-compose.local.yml down
+docker compose -f docker-compose.local.yml down
 rm -rf data/ postgres_data/ redis_data/
 ```
 
@@ -186,23 +191,22 @@ For **named volumes version** (docker-compose.yml):
 
 ```bash
 # Start services
-docker-compose up -d
+docker compose up -d --build
 
 # Stop services
-docker-compose down
+docker compose down
 
 # View logs
-docker-compose logs -f sub2api
+docker compose logs -f sub2api
 
 # Restart Sub2API only
-docker-compose restart sub2api
+docker compose restart sub2api
 
-# Update to latest version
-docker-compose pull
-docker-compose up -d
+# Rebuild after source changes
+docker compose up -d --build
 
 # Remove all data (caution!)
-docker-compose down -v
+docker compose down -v
 ```
 
 ### Environment Variables
@@ -227,12 +231,12 @@ See `.env.example` for all available options.
 
 ### Easy Migration (Local Directory Version)
 
-When using `docker-compose.local.yml`, all data is stored in local directories, making migration simple:
+When using `docker-compose.local.yml`, all data is stored in local directories, making migration simple. Since the application image is built from your current repository, the copied deployment directory should stay next to the checked-out source tree used for the build:
 
 ```bash
 # On source server: Stop services and create archive
 cd /path/to/deployment
-docker-compose -f docker-compose.local.yml down
+docker compose -f docker-compose.local.yml down
 cd ..
 tar czf sub2api-complete.tar.gz deployment/
 
@@ -242,7 +246,7 @@ scp sub2api-complete.tar.gz user@new-server:/path/to/destination/
 # On new server: Extract and start
 tar xzf sub2api-complete.tar.gz
 cd deployment/
-docker-compose -f docker-compose.local.yml up -d
+docker compose -f docker-compose.local.yml up -d --build
 ```
 
 Your entire deployment (configuration + data) is migrated!
@@ -492,19 +496,19 @@ For **local directory version**:
 
 ```bash
 # Check container status
-docker-compose -f docker-compose.local.yml ps
+docker compose -f docker-compose.local.yml ps
 
 # View detailed logs
-docker-compose -f docker-compose.local.yml logs --tail=100 sub2api
+docker compose -f docker-compose.local.yml logs --tail=100 sub2api
 
 # Check database connection
-docker-compose -f docker-compose.local.yml exec postgres pg_isready
+docker compose -f docker-compose.local.yml exec postgres pg_isready
 
 # Check Redis connection
-docker-compose -f docker-compose.local.yml exec redis redis-cli ping
+docker compose -f docker-compose.local.yml exec redis redis-cli ping
 
 # Restart all services
-docker-compose -f docker-compose.local.yml restart
+docker compose -f docker-compose.local.yml restart
 
 # Check data directories
 ls -la data/ postgres_data/ redis_data/
@@ -514,19 +518,19 @@ For **named volumes version**:
 
 ```bash
 # Check container status
-docker-compose ps
+docker compose ps
 
 # View detailed logs
-docker-compose logs --tail=100 sub2api
+docker compose logs --tail=100 sub2api
 
 # Check database connection
-docker-compose exec postgres pg_isready
+docker compose exec postgres pg_isready
 
 # Check Redis connection
-docker-compose exec redis redis-cli ping
+docker compose exec redis redis-cli ping
 
 # Restart all services
-docker-compose restart
+docker compose restart
 ```
 
 ### Binary Install

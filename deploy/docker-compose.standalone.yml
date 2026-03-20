@@ -6,13 +6,22 @@
 #
 # Usage:
 #   1. Copy .env.example to .env and configure database/redis connection
-#   2. docker-compose -f docker-compose.standalone.yml up -d
+#   2. docker compose -f docker-compose.standalone.yml up -d --build
 #   3. Access: http://localhost:8080
 # =============================================================================
 
 services:
   sub2api:
-    image: weishaw/sub2api:latest
+    image: ${SUB2API_IMAGE:-sub2api-local:latest}
+    build:
+      # Build the current checked-out repository source.
+      # The full repository must exist on the server; deploy/ alone is not enough.
+      context: ..
+      dockerfile: Dockerfile
+      args:
+        VERSION: ${SUB2API_BUILD_VERSION:-local}
+        GOPROXY: ${DOCKER_GOPROXY:-https://goproxy.cn,direct}
+        GOSUMDB: ${DOCKER_GOSUMDB:-sum.golang.google.cn}
     container_name: sub2api
     restart: unless-stopped
     ulimits:

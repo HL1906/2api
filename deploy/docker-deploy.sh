@@ -2,13 +2,14 @@
 # =============================================================================
 # Sub2API Docker Deployment Preparation Script
 # =============================================================================
-# This script prepares deployment files for Sub2API:
-#   - Downloads docker-compose.local.yml and .env.example
+# This script prepares Docker deployment for the CURRENT repository source:
+#   - Uses local deploy/docker-compose.local.yml and .env.example
 #   - Generates secure secrets (JWT_SECRET, TOTP_ENCRYPTION_KEY, POSTGRES_PASSWORD)
 #   - Creates necessary data directories
 #
-# After running this script, you can start services with:
-#   docker-compose up -d
+# Run this script from any directory inside the checked-out repository.
+# After running this script, start services with:
+#   docker compose -f docker-compose.local.yml up -d --build
 # =============================================================================
 
 set -e
@@ -20,8 +21,9 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# GitHub raw content base URL
-GITHUB_RAW_URL="https://raw.githubusercontent.com/Wei-Shaw/sub2api/main/deploy"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+DEPLOY_DIR="${SCRIPT_DIR}"
 
 # Print colored message
 print_info() {
@@ -64,9 +66,21 @@ main() {
         exit 1
     fi
 
+    # Validate repository layout
+    if [ ! -f "${REPO_ROOT}/Dockerfile" ] || [ ! -f "${DEPLOY_DIR}/docker-compose.local.yml" ] || [ ! -f "${DEPLOY_DIR}/.env.example" ]; then
+        print_error "Could not find repository Docker deployment files."
+        print_error "Expected files:"
+        print_error "  ${REPO_ROOT}/Dockerfile"
+        print_error "  ${DEPLOY_DIR}/docker-compose.local.yml"
+        print_error "  ${DEPLOY_DIR}/.env.example"
+        exit 1
+    fi
+
+    cd "${DEPLOY_DIR}"
+
     # Check if deployment already exists
-    if [ -f "docker-compose.yml" ] && [ -f ".env" ]; then
-        print_warning "Deployment files already exist in current directory."
+    if [ -f ".env" ]; then
+        print_warning "Deployment files already exist in ${DEPLOY_DIR}."
         read -p "Overwrite existing files? (y/N): " -r
         echo
         if [[ ! $REPLY =~ ^[Yy]$ ]]; then
@@ -75,26 +89,8 @@ main() {
         fi
     fi
 
-    # Download docker-compose.local.yml and save as docker-compose.yml
-    print_info "Downloading docker-compose.yml..."
-    if command_exists curl; then
-        curl -sSL "${GITHUB_RAW_URL}/docker-compose.local.yml" -o docker-compose.yml
-    elif command_exists wget; then
-        wget -q "${GITHUB_RAW_URL}/docker-compose.local.yml" -O docker-compose.yml
-    else
-        print_error "Neither curl nor wget is installed. Please install one of them."
-        exit 1
-    fi
-    print_success "Downloaded docker-compose.yml"
-
-    # Download .env.example
-    print_info "Downloading .env.example..."
-    if command_exists curl; then
-        curl -sSL "${GITHUB_RAW_URL}/.env.example" -o .env.example
-    else
-        wget -q "${GITHUB_RAW_URL}/.env.example" -O .env.example
-    fi
-    print_success "Downloaded .env.example"
+    print_info "Using local repository source at ${REPO_ROOT}"
+    print_success "Found local Docker deployment files"
 
     # Generate .env file with auto-generated secrets
     print_info "Generating secure secrets..."
@@ -105,8 +101,8 @@ main() {
     TOTP_ENCRYPTION_KEY=$(generate_secret)
     POSTGRES_PASSWORD=$(generate_secret)
 
-    # Create .env from .env.example
-    cp .env.example .env
+    # Create .env from local .env.example
+    cp "${DEPLOY_DIR}/.env.example" .env
 
     # Update .env with generated secrets (cross-platform compatible)
     if sed --version >/dev/null 2>&1; then
@@ -144,7 +140,7 @@ main() {
     print_warning "Please keep them secure and do not share publicly!"
     echo ""
     echo "Directory structure:"
-    echo "  docker-compose.yml        - Docker Compose configuration"
+    echo "  docker-compose.local.yml  - Docker Compose configuration (builds current source)"
     echo "  .env                      - Environment variables (generated secrets)"
     echo "  .env.example              - Example template (for reference)"
     echo "  data/                     - Application data (will be created on first run)"
@@ -154,10 +150,10 @@ main() {
     echo "Next steps:"
     echo "  1. (Optional) Edit .env to customize configuration"
     echo "  2. Start services:"
-    echo "     docker-compose up -d"
+    echo "     docker compose -f docker-compose.local.yml up -d --build"
     echo ""
     echo "  3. View logs:"
-    echo "     docker-compose logs -f sub2api"
+    echo "     docker compose -f docker-compose.local.yml logs -f sub2api"
     echo ""
     echo "  4. Access Web UI:"
     echo "     http://localhost:8080"
