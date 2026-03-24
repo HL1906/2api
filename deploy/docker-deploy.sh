@@ -120,6 +120,13 @@ main() {
     # Create data directories
     print_info "Creating data directories..."
     mkdir -p data postgres_data redis_data
+    if [ "$(id -u)" -eq 0 ]; then
+        chown -R 1000:1000 data
+        print_info "Set data/ ownership to UID/GID 1000 for container write access"
+    else
+        print_warning "Not running as root; if startup fails with config permission denied, run:"
+        print_warning "  sudo chown -R 1000:1000 ${DEPLOY_DIR}/data"
+    fi
     print_success "Created data directories"
 
     # Set secure permissions for .env file (readable/writable only by owner)

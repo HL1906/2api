@@ -53,6 +53,7 @@ services:
       # Auto Setup (REQUIRED for Docker deployment)
       # =======================================================================
       - AUTO_SETUP=true
+      - DATA_DIR=/app/data
 
       # =======================================================================
       # Server Configuration
